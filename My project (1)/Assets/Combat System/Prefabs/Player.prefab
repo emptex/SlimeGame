@@ -9,11 +9,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 496787308148939742}
+  - component: {fileID: 3319268237384620227}
+  - component: {fileID: 2785619816781866847}
   - component: {fileID: 4661191425621622810}
   - component: {fileID: 8325155355136637995}
   - component: {fileID: 7299023618031213868}
   - component: {fileID: 3708411798734549955}
   - component: {fileID: 3980738614387655131}
+  - component: {fileID: 5181467811186808763}
   m_Layer: 8
   m_Name: PlayerCapsule
   m_TagString: Player
@@ -39,6 +42,38 @@ Transform:
   - {fileID: 5605236609859986040}
   m_Father: {fileID: 5001048643621060656}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3319268237384620227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1085102027800857467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be630e77ef0f3493ea2fb1bab2661b41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHP: 100
+  currentHP: 100
+  attackPower: 10
+  defense: 2
+  critChance: 0.1
+--- !u!114 &2785619816781866847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1085102027800857467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6f09e5f51e844faf9c4fbc749a62705, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stats: {fileID: 7160149746462919215}
+  attackHitboxPrefab: {fileID: 841886434491307897, guid: 82eb059300cda4f3788b74f66c061947, type: 3}
+  hitboxSpawnPoint: {fileID: 263529161365616855}
 --- !u!143 &4661191425621622810
 CharacterController:
   m_ObjectHideFlags: 0
@@ -113,7 +148,7 @@ MonoBehaviour:
   pushLayers:
     serializedVersion: 2
     m_Bits: 0
-  canPush: 0
+  canPush: 1
   strength: 1.1
 --- !u!114 &3708411798734549955
 MonoBehaviour:
@@ -230,8 +265,31 @@ MonoBehaviour:
   jump: 0
   sprint: 0
   analogMovement: 0
-  cursorLocked: 1
-  cursorInputForLook: 1
+  cursorLocked: 0
+  cursorInputForLook: 0
+--- !u!136 &5181467811186808763
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1085102027800857467}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.74
+  m_Height: 4.29
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.78, z: 0}
 --- !u!1 &2681883269276832154
 GameObject:
   m_ObjectHideFlags: 0
@@ -777,13 +835,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8504709354608101502}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: be630e77ef0f3493ea2fb1bab2661b41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   maxHP: 100
-  currentHP: 0
+  currentHP: 100
   attackPower: 10
   defense: 2
   critChance: 0.1
@@ -794,7 +852,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8504709354608101502}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6f09e5f51e844faf9c4fbc749a62705, type: 3}
   m_Name: 

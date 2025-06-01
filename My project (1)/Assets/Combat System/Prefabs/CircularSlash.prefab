@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 716417620889125462}
   - component: {fileID: 1772321131005698039}
   m_Layer: 0
-  m_Name: HitBox
+  m_Name: CircularSlash
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
