@@ -516,6 +516,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 756150388}
   m_CullTransparentMesh: 1
+--- !u!1 &817699240
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 817699242}
+  - component: {fileID: 817699241}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &817699241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 817699240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 190c1b471de2ad34b8f4261014ac1404, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  executionUIPrefab: {fileID: 6906259074063749317}
+--- !u!4 &817699242
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 817699240}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -15, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &883813753
 GameObject:
   m_ObjectHideFlags: 0
@@ -1573,6 +1618,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1882696972}
   m_CullTransparentMesh: 1
+--- !u!114 &1933299152 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1223654839591894883, guid: c4247ed3c52487b4fa42ba9af223d72c, type: 3}
+  m_PrefabInstance: {fileID: 6906259074063749316}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1946971758
 GameObject:
   m_ObjectHideFlags: 0
@@ -1769,6 +1825,17 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
+--- !u!114 &2143870883 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5098598291633546607, guid: c4247ed3c52487b4fa42ba9af223d72c, type: 3}
+  m_PrefabInstance: {fileID: 6906259074063749316}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &3839323642566465071
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1897,7 +1964,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6636159339919929523, guid: 27720e23a671747e9aa23dbb93ca646e, type: 3}
       propertyPath: m_TagString
-      value: Enermy
+      value: Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 8652028811731176247, guid: 27720e23a671747e9aa23dbb93ca646e, type: 3}
       propertyPath: attackHitboxPrefab
@@ -2069,6 +2136,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e27fe5d43ea06e044b5579c605ec74ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  killButton: {fileID: 1933299152}
+  healButton: {fileID: 2143870883}
 --- !u!114 &7295451076115703391 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3319268237384620227, guid: 9ae341ce780a54227b569cb38938c6a6, type: 3}
@@ -2155,3 +2224,4 @@ SceneRoots:
   - {fileID: 1724127141}
   - {fileID: 3839323642566465071}
   - {fileID: 6906259074063749316}
+  - {fileID: 817699242}

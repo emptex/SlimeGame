@@ -5,7 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - CinemachineTarget
-  - Enermy
+  - Enemy
   layers:
   - Default
   - TransparentFX
