@@ -1,36 +1,41 @@
+using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+    private List<CharacterStats> enemies = new List<CharacterStats>();
 
     [Header("Execution UI 预制件")]
     public GameObject executionUIPrefab; // 拖：Assets/Combat System/Prefabs/ExecutionUI.prefab
 
+    // 保证场景里有且只有一个不随场景销毁的GameManager实例
     private void Awake()
     {
         if (Instance != null && Instance != this)
         {
+            Debug.Log($"[GameManager] 发现重复的 GameManager 实例，销毁：{name}");
             Destroy(this.gameObject);
             return;
         }
         Instance = this;
         DontDestroyOnLoad(this.gameObject);
+        Debug.Log($"[GameManager] 单例初始化完成，实例名：{name}");
     }
 
-    private void Start()
-    {
-        // 如果你是在运行时才生成敌人，可以在敌人生成的地方把 OnZeroHP 绑定过去
-        // 但更常见的是：在 EnemyHealth.Start() 里就会调用 RegisterEnemy(this)
-        // 这里先留空
-    }
 
-    /// <summary>
-    /// 让 GameManager 订阅一个刚生成或场景中已有的 EnemyHealth
-    /// </summary>
+    /// 声明一个调用函数RegisterEnemy，让 GameManager 订阅一个刚生成或场景中已有的 CharacterStats：当后续 stats 的 ApplyHPChange(...) 中发现血量归零时，会触发 OnZeroHP 事件，届时自动调用 HandleEnemyZeroHP(stats)
     public void RegisterEnemy(CharacterStats stats)
     {
-        stats.OnZeroHP += HandleEnemyZeroHP;
+        if (!enemies.Contains(stats))
+        {
+            enemies.Add(stats);
+            // 订阅它的零血事件
+            stats.OnZeroHP += HandleEnemyZeroHP;
+            Debug.Log($"[GameManager] 已订阅 {stats.gameObject.name} 的 OnZeroHP");
+        }
     }
 
     /// <summary>
@@ -39,12 +44,29 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void HandleEnemyZeroHP(CharacterStats stats)
     {
+        Debug.Log($"[GameManager] 收到 {stats.gameObject.name} 血量归零事件，弹出处决 UI");
+        if (executionUIPrefab == null)
+        {
+            Debug.LogError("[GameManager] executionUIPrefab 为 null！请在 Inspector 中拖入 Prefab");
+            return;
+
+        }
         // 1. 实例化 ExecutionUI
         GameObject uiGO = Instantiate(executionUIPrefab);
+        uiGO.SetActive(true); // 强制激活
+        Debug.Log("[GameManager] Instantiate 已完成，uiGO = " + uiGO.name
+              + "，activeSelf = " + uiGO.activeSelf);
 
-        // 2. 把它的 ExecutionUIController 拿到，调用 Init(enemy)
+        // 2. 把它的 ExecutionUIController 拿到，调用 Init(stats)
         ExecutionUIController uiCtrl = uiGO.GetComponent<ExecutionUIController>();
+        if (uiCtrl == null)
+        {
+            Debug.LogError("[GameManager] 执行 Prefab 后没拿到 ExecutionUIController 组件！");
+            return;
+        }
+        Debug.Log("[GameManager] 拿到 uiCtrl，准备调用 Init()，调用前 uiGO.activeSelf = " + uiGO.activeSelf);
         uiCtrl.Init(stats);
+        Debug.Log("[GameManager] 调用完 Init(), uiGO.activeSelf = " + uiGO.activeSelf);
     }
 
     /// <summary>

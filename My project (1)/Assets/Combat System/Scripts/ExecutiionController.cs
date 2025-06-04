@@ -11,10 +11,15 @@ public class ExecutionUIController : MonoBehaviour
     public Button killButton;    // 拖：ExecutionUI.prefab 里“杀死”按钮
     public Button healButton;    // 拖：ExecutionUI.prefab 里“治愈”按钮
 
+    [Header("与怪物的偏移设置")]
+    [Tooltip("X 表示沿怪物本地右侧偏移多少，Y 表示抬高多少，Z 表示沿怪物本地前方向偏移多少")]
+    public Vector3 localOffset = new Vector3(1.0f, 1.5f, 0.0f);
+
     private CharacterStats targetEnemy;   // 当前等待玩家选择的 Enemy
 
     void Awake()
     {
+        Debug.Log("[ExecutionUIController] Awake, killButton=" + (killButton ? killButton.name : "null") + ", healButton=" + (healButton ? healButton.name : "null"));
         // 先把 UI 隐藏，只有 Init 时才显示
         gameObject.SetActive(false);
 
@@ -25,50 +30,75 @@ public class ExecutionUIController : MonoBehaviour
 
     /// <summary>
     /// 初始化这个 UI，告诉它“现在要对哪一个敌人做处决选择”。
+    /// 并把它放在怪物身侧 + 一点抬高，始终面朝摄像机。
     /// </summary>
-    /// <param name="enemy">当前处于待处决状态的 EnemyHealth</param>
+    /// <param name="enemy">当前处于待处决状态的敌人 CharacterStats</param>
     public void Init(CharacterStats enemyStats)
     {
         targetEnemy = enemyStats;
+        Debug.Log("[ExecutionUIController] Init(): 切换成可见 (SetActive(true))，Init 之前 activeSelf = " + gameObject.activeSelf);
         gameObject.SetActive(true);
+        Debug.Log("[ExecutionUIController] Init(): 切换后 activeSelf = " + gameObject.activeSelf);
 
-        // 把 UI 定位到敌人头顶：假设敌人的根节点在地面高度，是 0，在上面加个偏移
-        Vector3 headPos = targetEnemy.transform.position + Vector3.up * 2.0f; // 你可以根据敌人模型高度调整偏移量
-        transform.position = headPos;
+        // 计算“怪物身侧 + 抬高”的世界坐标：
+        //    首先，拿到怪物的世界位置
+        Vector3 basePos = targetEnemy.transform.position;
+        //    然后，将 localOffset 从怪物的本地空间转换到世界空间：
+        Vector3 worldOffset =
+            targetEnemy.transform.right * localOffset.x   // 向本地右侧偏移
+          + Vector3.up * localOffset.y   // 向世界 Y 轴方向抬高
+          + targetEnemy.transform.forward * localOffset.z;  // 向本地“前方”偏移（如果需要）
+
+        transform.position = basePos + worldOffset;
 
         // 让 UI 面朝主摄像机，保持可视
         if (Camera.main != null)
         {
-            transform.rotation = Quaternion.LookRotation(Camera.main.transform.forward, Vector3.up);
+            Vector3 toCamera = Camera.main.transform.position - transform.position;
+            transform.rotation = Quaternion.LookRotation(-toCamera, Vector3.up);
         }
     }
 
-    private void LateUpdate()
+    void LateUpdate()
     {
-        // 如果玩家和摄像机位置变化、敌人还没被销毁，保持 UI 跟随头顶
         if (targetEnemy != null && gameObject.activeSelf)
         {
-            Vector3 headPos = targetEnemy.transform.position + Vector3.up * 2.0f;
-            transform.position = headPos;
+            // 每一帧都跟随怪物：重新计算世界坐标
+            Vector3 basePos = targetEnemy.transform.position;
+            Vector3 worldOffset =
+                targetEnemy.transform.right * localOffset.x
+              + Vector3.up * localOffset.y
+              + targetEnemy.transform.forward * localOffset.z;
+
+            transform.position = basePos + worldOffset;
+
             if (Camera.main != null)
             {
-                transform.rotation = Quaternion.LookRotation(Camera.main.transform.forward, Vector3.up);
+                Vector3 toCamera = Camera.main.transform.position - transform.position;
+                transform.rotation = Quaternion.LookRotation(-toCamera, Vector3.up);
             }
         }
     }
 
     private void OnKillClicked()
     {
+        Debug.Log("[ExecutionUIController] OnKillClicked 被调用");
         if (targetEnemy != null)
         {
+            Debug.Log("[ExecutionUIController] targetEnemy 不为 null，调用 GameManager.Instance.OnEnemyKillConfirmed");
             // 通知 GameManager：玩家选择“杀死”这个敌人
             GameManager.Instance.OnEnemyKillConfirmed(targetEnemy);
+        }
+        else
+        {
+            Debug.LogWarning("[ExecutionUIController] targetEnemy 为 null");
         }
         Destroy(gameObject);
     }
 
     private void OnHealClicked()
     {
+
         if (targetEnemy != null)
         {
             // 通知 GameManager：玩家选择“治愈”这个敌人

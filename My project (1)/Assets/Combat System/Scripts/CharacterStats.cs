@@ -17,31 +17,35 @@ public class CharacterStats : MonoBehaviour
     public int attackPower = 20;       // 攻击力
     public int defense = 5;            // 防御
 
-    // 事件：当血量从正数变为 0 的那一刻，会调用此事件
-    // GameManager 可以订阅它，只有挂了 Tag = "Enemy" 的实例才会真正注册
+    // 事件：血量从正数变为 0 的那一刻；flag一个血量归零（死亡）次数
     public event Action<CharacterStats> OnZeroHP;
-
-    // 用来保证“只在从正数变到0的瞬间”触发一次，不会重复
     private bool hasTriggeredZero = false;
 
     void Awake()
     {
-        // 游戏开始时，让 currentHP 等于 maxHP
+        // 游戏开始时，让 currentHP 等于 maxHP；血量归零（死亡）触发次数为“否”
         currentHP = maxHP;
         hasTriggeredZero = false;
 
-        // 如果这是一个敌人（假设在 Inspector 里给所有敌人设置了 Tag = "Enemy"），
-        // 那么就在 Awake 里把自己注册给 GameManager
+    }
+    private void Start()
+    {     
+        // 如果这是一个敌人（带有Enemy Tag),就在 Awake 里把自己注册给 GameManager
         if (gameObject.CompareTag("Enemy"))
         {
-            // 一定要保证 GameManager.Instance 已经初始化
+            // 保证 GameManager.Instance 已经初始化
             if (GameManager.Instance != null)
             {
+                Debug.Log($"[CharacterStats] Awake: 敌人 “{gameObject.name}” 正在注册到 GameManager");
                 GameManager.Instance.RegisterEnemy(this);
+                Debug.Log($"[CharacterStats] Awake: 敌人 “{gameObject.name}” 已注册到 GameManager");
+            }
+            else
+            {
+                Debug.LogWarning($"[CharacterStats] Awake: 敌人 “{gameObject.name}” 试图注册到 GameManager，但 GameManager.Instance 为 null");
             }
         }
     }
-
     /// <summary>
     /// 外部调用：对当前血量进行一次增减，并将结果限制在 [0, maxHP] 区间。
     /// value 为正时表示扣血，value 为负时表示回血。
@@ -55,6 +59,7 @@ public class CharacterStats : MonoBehaviour
 
         Debug.Log($"{gameObject.name}.ApplyHPChange({value}) 实施后，currentHP = {currentHP}/{maxHP}");
 
+        Debug.Log($"[DEBUG] 判断前：currentHP = {currentHP}, hasTriggeredZero = {hasTriggeredZero}");
         // 如果血量为 0，且还没触发过“从正数变到 0”这一事件，就触发
         if (currentHP == 0 && hasTriggeredZero == false)
         {
