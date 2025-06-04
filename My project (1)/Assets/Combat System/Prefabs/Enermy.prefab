@@ -51,12 +51,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a47886e83522c477e8a2b1cab18a3329, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  detectionRadius: 15
-  chaseSpeed: 4
+  detectionRadius: 6
+  chaseSpeed: 3
   roamSpeed: 1.5
   roamChangeInterval: 4
-  attackRangeCollider: {fileID: 4322540569838768359}
-  attackInterval: 2
+  maxRoamRadius: 7.88
+  attackRangeCollider: {fileID: 0}
+  attackInterval: 1
+  attackEffectiveDistance: 1
 --- !u!33 &4923486684651985372
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -174,7 +176,6 @@ MonoBehaviour:
   currentHP: 10
   attackPower: 10
   defense: 0
-  critChance: 0.1
 --- !u!114 &8652028811731176247
 MonoBehaviour:
   m_ObjectHideFlags: 0
