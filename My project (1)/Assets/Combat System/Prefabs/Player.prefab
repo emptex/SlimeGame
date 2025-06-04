@@ -58,7 +58,6 @@ MonoBehaviour:
   currentHP: 100
   attackPower: 10
   defense: 2
-  critChance: 0.1
 --- !u!114 &2785619816781866847
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -406,6 +405,38 @@ Transform:
   m_Children: []
   m_Father: {fileID: 496787308148939742}
   m_LocalEulerAnglesHint: {x: 30, y: 0, z: 0}
+--- !u!1 &4800410524129980619
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1602969556210739938}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1602969556210739938
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4800410524129980619}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 5441884227516878039}
+  m_Father: {fileID: 5001048643621060656}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4947094432870440721
 GameObject:
   m_ObjectHideFlags: 0
@@ -576,7 +607,7 @@ Transform:
   m_GameObject: {fileID: 6738021696739107015}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.000001008071, y: 1.6055611e-14, z: -0.00000038045084}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -744,14 +775,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6854216856417198481}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.2588191, y: 0, z: 0, w: 0.9659258}
+  m_LocalRotation: {x: 0.2588191, y: -0, z: -0, w: 0.9659258}
   m_LocalPosition: {x: 0, y: 12.19, z: -20.08}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4392493500037200941}
   - {fileID: 4175520645669506765}
-  m_Father: {fileID: 5001048643621060656}
+  m_Father: {fileID: 1602969556210739938}
   m_LocalEulerAnglesHint: {x: 30, y: 0, z: 0}
 --- !u!114 &5099782604374430050
 MonoBehaviour:
@@ -824,8 +855,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5441884227516878039}
   - {fileID: 496787308148939742}
+  - {fileID: 1602969556210739938}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7160149746462919215
@@ -844,7 +875,6 @@ MonoBehaviour:
   currentHP: 100
   attackPower: 10
   defense: 2
-  critChance: 0.1
 --- !u!114 &6901497848010013298
 MonoBehaviour:
   m_ObjectHideFlags: 0
