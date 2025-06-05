@@ -1,116 +1,68 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// ÓÃÓÚ¿ØÖÆ´¦¾ö UI µÄÏÔÊ¾Óë°´Å¥»Øµ÷¡£
-/// Õâ¸ö½Å±¾ĞèÒª¹ÒÔÚ ExecutionUI.prefab µÄ¸ù½Úµã£¨¹ÒÔÚÄÇ¸ö World Space Canvas ÉÏ£©¡£
-/// </summary>
 public class ExecutionUIController : MonoBehaviour
 {
-    [Header("UI ÒıÓÃ")]
-    public Button killButton;    // ÍÏ£ºExecutionUI.prefab Àï¡°É±ËÀ¡±°´Å¥
-    public Button healButton;    // ÍÏ£ºExecutionUI.prefab Àï¡°ÖÎÓú¡±°´Å¥
+    [Header("UI æç¤ºæ–‡å­—")]
+    public Text promptText; // UI Textï¼šæ˜¾ç¤ºâ€œPress R to Kill / Y to Healâ€
 
-    [Header("Óë¹ÖÎïµÄÆ«ÒÆÉèÖÃ")]
-    [Tooltip("X ±íÊ¾ÑØ¹ÖÎï±¾µØÓÒ²àÆ«ÒÆ¶àÉÙ£¬Y ±íÊ¾Ì§¸ß¶àÉÙ£¬Z ±íÊ¾ÑØ¹ÖÎï±¾µØÇ°·½ÏòÆ«ÒÆ¶àÉÙ")]
+    [Header("åç§»è®¾ç½®")]
     public Vector3 localOffset = new Vector3(1.0f, 1.5f, 0.0f);
 
-    private CharacterStats targetEnemy;   // µ±Ç°µÈ´ıÍæ¼ÒÑ¡ÔñµÄ Enemy
+    private CharacterStats targetEnemy;
 
     void Awake()
     {
-        Debug.Log("[ExecutionUIController] Awake, killButton=" + (killButton ? killButton.name : "null") + ", healButton=" + (healButton ? healButton.name : "null"));
-        // ÏÈ°Ñ UI Òş²Ø£¬Ö»ÓĞ Init Ê±²ÅÏÔÊ¾
         gameObject.SetActive(false);
-
-        // °ó¶¨°´Å¥»Øµ÷
-        killButton.onClick.AddListener(OnKillClicked);
-        healButton.onClick.AddListener(OnHealClicked);
     }
 
-    /// <summary>
-    /// ³õÊ¼»¯Õâ¸ö UI£¬¸æËßËü¡°ÏÖÔÚÒª¶ÔÄÄÒ»¸öµĞÈË×ö´¦¾öÑ¡Ôñ¡±¡£
-    /// ²¢°ÑËü·ÅÔÚ¹ÖÎïÉí²à + Ò»µãÌ§¸ß£¬Ê¼ÖÕÃæ³¯ÉãÏñ»ú¡£
-    /// </summary>
-    /// <param name="enemy">µ±Ç°´¦ÓÚ´ı´¦¾ö×´Ì¬µÄµĞÈË CharacterStats</param>
     public void Init(CharacterStats enemyStats)
     {
         targetEnemy = enemyStats;
-        Debug.Log("[ExecutionUIController] Init(): ÇĞ»»³É¿É¼û (SetActive(true))£¬Init Ö®Ç° activeSelf = " + gameObject.activeSelf);
         gameObject.SetActive(true);
-        Debug.Log("[ExecutionUIController] Init(): ÇĞ»»ºó activeSelf = " + gameObject.activeSelf);
 
-        // ¼ÆËã¡°¹ÖÎïÉí²à + Ì§¸ß¡±µÄÊÀ½ç×ø±ê£º
-        //    Ê×ÏÈ£¬ÄÃµ½¹ÖÎïµÄÊÀ½çÎ»ÖÃ
-        Vector3 basePos = targetEnemy.transform.position;
-        //    È»ºó£¬½« localOffset ´Ó¹ÖÎïµÄ±¾µØ¿Õ¼ä×ª»»µ½ÊÀ½ç¿Õ¼ä£º
-        Vector3 worldOffset =
-            targetEnemy.transform.right * localOffset.x   // Ïò±¾µØÓÒ²àÆ«ÒÆ
-          + Vector3.up * localOffset.y   // ÏòÊÀ½ç Y Öá·½ÏòÌ§¸ß
-          + targetEnemy.transform.forward * localOffset.z;  // Ïò±¾µØ¡°Ç°·½¡±Æ«ÒÆ£¨Èç¹ûĞèÒª£©
-
-        transform.position = basePos + worldOffset;
-
-        // ÈÃ UI Ãæ³¯Ö÷ÉãÏñ»ú£¬±£³Ö¿ÉÊÓ
-        if (Camera.main != null)
+        if (promptText != null)
         {
-            Vector3 toCamera = Camera.main.transform.position - transform.position;
-            transform.rotation = Quaternion.LookRotation(-toCamera, Vector3.up);
+            promptText.text = "Press R to Kill\nPress Y to Heal";
         }
+
+        UpdatePositionAndRotation();
     }
 
     void LateUpdate()
     {
         if (targetEnemy != null && gameObject.activeSelf)
         {
-            // Ã¿Ò»Ö¡¶¼¸úËæ¹ÖÎï£ºÖØĞÂ¼ÆËãÊÀ½ç×ø±ê
-            Vector3 basePos = targetEnemy.transform.position;
-            Vector3 worldOffset =
-                targetEnemy.transform.right * localOffset.x
-              + Vector3.up * localOffset.y
-              + targetEnemy.transform.forward * localOffset.z;
+            UpdatePositionAndRotation();
 
-            transform.position = basePos + worldOffset;
-
-            if (Camera.main != null)
+            // ğŸ” ç›‘å¬æŒ‰é”®
+            if (Input.GetKeyDown(KeyCode.R))
             {
-                Vector3 toCamera = Camera.main.transform.position - transform.position;
-                transform.rotation = Quaternion.LookRotation(-toCamera, Vector3.up);
+                GameManager.Instance.OnEnemyKillConfirmed(targetEnemy);
+                Destroy(gameObject);
+            }
+            else if (Input.GetKeyDown(KeyCode.Y))
+            {
+                GameManager.Instance.OnEnemyHealConfirmed(targetEnemy);
+                Destroy(gameObject);
             }
         }
     }
 
-    private void OnKillClicked()
+    void UpdatePositionAndRotation()
     {
-        Debug.Log("[ExecutionUIController] OnKillClicked ±»µ÷ÓÃ");
-        if (targetEnemy != null)
-        {
-            Debug.Log("[ExecutionUIController] targetEnemy ²»Îª null£¬µ÷ÓÃ GameManager.Instance.OnEnemyKillConfirmed");
-            // Í¨Öª GameManager£ºÍæ¼ÒÑ¡Ôñ¡°É±ËÀ¡±Õâ¸öµĞÈË
-            GameManager.Instance.OnEnemyKillConfirmed(targetEnemy);
-        }
-        else
-        {
-            Debug.LogWarning("[ExecutionUIController] targetEnemy Îª null");
-        }
-        Destroy(gameObject);
-    }
+        Vector3 basePos = targetEnemy.transform.position;
+        Vector3 worldOffset =
+              targetEnemy.transform.right * localOffset.x
+            + Vector3.up * localOffset.y
+            + targetEnemy.transform.forward * localOffset.z;
 
-    private void OnHealClicked()
-    {
+        transform.position = basePos + worldOffset;
 
-        if (targetEnemy != null)
+        if (Camera.main != null)
         {
-            // Í¨Öª GameManager£ºÍæ¼ÒÑ¡Ôñ¡°ÖÎÓú¡±Õâ¸öµĞÈË
-            GameManager.Instance.OnEnemyHealConfirmed(targetEnemy);
+            Vector3 toCamera = Camera.main.transform.position - transform.position;
+            transform.rotation = Quaternion.LookRotation(-toCamera, Vector3.up);
         }
-        Destroy(gameObject);
-    }
-
-    private void OnDestroy()
-    {
-        // ×¢Òâ£º½â°óÊÂ¼ş£¬±ÜÃâÒıÓÃĞ¹Â¶
-        killButton.onClick.RemoveListener(OnKillClicked);
-        healButton.onClick.RemoveListener(OnHealClicked);
     }
 }
