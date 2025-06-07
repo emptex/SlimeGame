@@ -47621,13 +47621,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetTag: Player
-  targetOverride: {fileID: 0}
-  followSpeed: 5
-  followRotation: 0
-  positionOffset: {x: 0, y: 5, z: -10}
-  useLocalOffset: 1
-  fixedRotation: {x: 30, y: 0, z: 0}
-  lookAtTarget: 0
+  target: {fileID: 0}
+  mouseSensitivity: 200
+  pitchMin: -40
+  pitchMax: 80
+  initialDistance: 1
+  minDistance: 0.5
+  maxDistance: 10
+  zoomSpeed: 5
+  positionOffset: {x: 0, y: 3, z: -3}
+  followSmoothTime: 0.1
+  avoidObstacles: 1
+  obstacleLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  collisionPadding: 0.2
 --- !u!1001 &1739291721
 PrefabInstance:
   m_ObjectHideFlags: 0
