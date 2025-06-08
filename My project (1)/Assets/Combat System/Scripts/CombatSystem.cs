@@ -19,24 +19,13 @@ public class CombatSystem : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 被外部调用：对本角色造成一次原始伤害（其他 CombatSystem 生成的 Hitbox 会调用到这里）。
-    /// </summary>
-    /// <param name="damage">外部判定体传过来的原始伤害值</param>
+
+    /// 被外部调用：对本角色造成一次原始伤害（其他 CombatSystem 生成的 Hitbox 会调用到这里）。<param name="damage">外部判定体传过来的原始伤害值</param>
+    /// . 先计算扣血：finalDamage = damage - 防御；1. 真正的扣血逻辑由CharacterStats.ApplyHPChange完成，这是为了确保执行到Charactor里的血量归零事件
     public void TakeDamage(int damage)
     {
-        // 1. 先计算扣血：finalDamage = damage - 防御
         int finalDamage = Mathf.Max(0, damage - stats.defense);
-
-        // 2. 直接把 currentHP 减掉
-        // ** 这一句就是把 CombatSystem 算好的 finalDamage 回传给 CharacterStats.currentHP **
-        stats.currentHP -= finalDamage;
-        if (stats.currentHP < 0) stats.currentHP = 0;
-
-        Debug.Log($"{gameObject.name} 受到了 {finalDamage} 点伤害，剩余 HP = {stats.currentHP}");
-
-        if (stats.currentHP <= 0)
-            Die();
+        stats.ApplyHPChange(finalDamage);
     }
 
     /// <summary>

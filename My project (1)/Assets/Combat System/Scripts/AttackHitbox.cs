@@ -13,6 +13,7 @@ public class AttackHitbox : MonoBehaviour
     {
         Collider col = GetComponent<Collider>();
         col.isTrigger = true;
+        Debug.Log($"[AttackHitbox] Start: owner = {owner} （应当是挂这个 Hitbox 的那把武器或玩家的 CombatSystem）");
         Destroy(gameObject, lifeTime);
     }
 
