@@ -1,42 +1,42 @@
 using UnityEngine;
 
 /// <summary>
-/// ÈÃÒ»¸ö World Space Canvas ÏÂµÄ UI£¨±ÈÈçÑªÌõ£©Ê¼ÖÕÃæÏòÖ¸¶¨ÉãÏñ»ú¡£
-/// Èç¹ûÃ»ÓĞÔÚ Inspector ÀïÊÖ¶¯Ö¸¶¨ targetCamera£¬»á³¢ÊÔÊ¹ÓÃ Camera.main£¨³¡¾°ÖĞ Tag Îª MainCamera µÄÉãÏñ»ú£©¡£
-/// Í¬Ê±»á²åÈë Debug.Log °ïÖú¼ì²éÉãÏñ»úÒıÓÃºÍĞı×ªÂß¼­ÊÇ·ñÕıÈ·¡£
+/// ï¿½ï¿½Ò»ï¿½ï¿½ World Space Canvas ï¿½Âµï¿½ UIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+/// ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ Inspector ï¿½ï¿½ï¿½Ö¶ï¿½Ö¸ï¿½ï¿½ targetCameraï¿½ï¿½ï¿½á³¢ï¿½ï¿½Ê¹ï¿½ï¿½ Camera.mainï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Tag Îª MainCamera ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+/// Í¬Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ Debug.Log ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½×ªï¿½ß¼ï¿½ï¿½Ç·ï¿½ï¿½ï¿½È·ï¿½ï¿½
 /// </summary>
 public class FaceUICamera : MonoBehaviour
 {
-    [Header("¡ª¡ª Ö¸¶¨ĞèÒªÃæ³¯µÄÉãÏñ»ú ¡ª¡ª")]
-    [Tooltip("Èç¹ûÄãµÄ³¡¾°ÀïÉãÏñ»ú²»ÊÇÄ¬ÈÏµÄ MainCamera£¬¿ÉÒÔÔÚ Inspector Àï°ÑÏëÒªÓÃµÄÉãÏñ»úÍÏµ½ÕâÀï¡£")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ Ö¸ï¿½ï¿½ï¿½ï¿½Òªï¿½æ³¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½Ïµï¿½ MainCameraï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Inspector ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¡£")]
     public Camera targetCamera;
 
-    // ÓÃÀ´¶Ô±ÈÉÏÒ»Ö¡Ä¿±êĞı×ª£¬Ö»ÓĞµ±½Ç¶È±ä»¯Ê±²Å´òÓ¡ÈÕÖ¾
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½Ò»Ö¡Ä¿ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Ö»ï¿½Ğµï¿½ï¿½Ç¶È±ä»¯Ê±ï¿½Å´ï¿½Ó¡ï¿½ï¿½Ö¾
     private Quaternion lastTargetRotation;
 
     void Start()
     {
-        // Èç¹ûÃ»ÓĞÔÚ Inspector Àï¸³Öµ£¬¾Í³¢ÊÔÓÃ Camera.main
+        // ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ Inspector ï¿½ï¸³Öµï¿½ï¿½ï¿½Í³ï¿½ï¿½ï¿½ï¿½ï¿½ Camera.main
         if (targetCamera == null)
         {
             targetCamera = Camera.main;
             if (targetCamera != null)
             {
-                Debug.Log($"[{nameof(FaceUICamera)}] Start(): Î´Ö¸¶¨ targetCamera£¬×Ô¶¯Ê¹ÓÃ Camera.main ({targetCamera.name})¡£");
+                Debug.Log($"[{nameof(FaceUICamera)}] Start(): Î´Ö¸ï¿½ï¿½ targetCameraï¿½ï¿½ï¿½Ô¶ï¿½Ê¹ï¿½ï¿½ Camera.main ({targetCamera.name})ï¿½ï¿½");
             }
             else
             {
-                Debug.LogError($"[{nameof(FaceUICamera)}] Start(): targetCamera Ò²Ã»ÓĞ£¨Camera.main Îª null£©¡£ÇëÔÚ Inspector ÀïÖ¸¶¨Ò»¸öÉãÏñ»úÒıÓÃ¡£");
+                Debug.LogError($"[{nameof(FaceUICamera)}] Start(): targetCamera Ò²Ã»ï¿½Ğ£ï¿½Camera.main Îª nullï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Inspector ï¿½ï¿½Ö¸ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¡ï¿½");
                 enabled = false;
                 return;
             }
         }
         else
         {
-            Debug.Log($"[{nameof(FaceUICamera)}] Start(): Ê¹ÓÃ Inspector ÀïÖ¸¶¨µÄÉãÏñ»ú£º{targetCamera.name}¡£");
+            Debug.Log($"[{nameof(FaceUICamera)}] Start(): Ê¹ï¿½ï¿½ Inspector ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½{targetCamera.name}ï¿½ï¿½");
         }
 
-        // ³õÊ¼»¯ lastTargetRotation£¬·½±ãºóÃæ±È½ÏÊÇ·ñÓĞ½Ç¶È±ä»¯
+        // ï¿½ï¿½Ê¼ï¿½ï¿½ lastTargetRotationï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½Ç·ï¿½ï¿½Ğ½Ç¶È±ä»¯
         lastTargetRotation = transform.rotation;
     }
 
@@ -45,31 +45,31 @@ public class FaceUICamera : MonoBehaviour
         if (targetCamera == null)
             return;
 
-        // ¼ÆËã´Óµ±Ç°ÎïÌåÖ¸ÏòÉãÏñ»úµÄÏòÁ¿
+        // ï¿½ï¿½ï¿½ï¿½Óµï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         Vector3 dirToCamera = targetCamera.transform.position - transform.position;
 
-        // Èç¹ûÄãÖ»ÏëÈÃ UI ÔÚË®Æ½Ãæ£¨XZ Æ½Ãæ£©¸úËæÉãÏñ»ú×ª£¬²»Ëæ×ÅÉãÏñ»úµÄ¸©Ñö½ÇÇãĞ±£¬¾Í´ò¿ªÏÂÒ»ĞĞ£º
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ UI ï¿½ï¿½Ë®Æ½ï¿½æ£¨XZ Æ½ï¿½æ£©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½ï¿½ï¿½Í´ï¿½ï¿½ï¿½Ò»ï¿½Ğ£ï¿½
         // dirToCamera.y = 0f;
 
-        // Èç¹û¾àÀëÌ«Ğ¡»òÕßÏòÁ¿ÎªÁã£¬¾ÍÌø¹ı±¾Ö¡Ğı×ª
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì«Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½×ª
         if (dirToCamera.sqrMagnitude < 0.0001f)
         {
-            Debug.LogWarning($"[{nameof(FaceUICamera)}] LateUpdate(): ÎïÌåÓëÉãÏñ»ú¼¸ºõÖØºÏ£¬Ìø¹ı±¾Ö¡Ğı×ª¡£");
+            Debug.LogWarning($"[{nameof(FaceUICamera)}] LateUpdate(): ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ØºÏ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½×ªï¿½ï¿½");
             return;
         }
 
-        // ¼ÆËãÄ¿±êĞı×ª£¬ÈÃ±¾ÎïÌåµÄ±¾µØ¡°Ç°·½¡±£¨Z+ ³¯Ïò£©¶Ô×¼ÉãÏñ»ú
+        // ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½Ø¡ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Z+ ï¿½ï¿½ï¿½ò£©¶ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½
         Quaternion targetRot = Quaternion.LookRotation(dirToCamera);
 
-        // Ö»ÓĞÔÚĞı×ª½Ç¶ÈÓĞÃ÷ÏÔ±ä»¯µÄÊ±ºò²Å´òÓ¡µ÷ÊÔĞÅÏ¢
+        // Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯ï¿½ï¿½Ê±ï¿½ï¿½Å´ï¿½Ó¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
         float angleDelta = Quaternion.Angle(lastTargetRotation, targetRot);
         if (angleDelta > 0.01f)
         {
-            Debug.Log($"[{nameof(FaceUICamera)}] LateUpdate(): dirToCamera.normalize = {dirToCamera.normalized}, Ä¿±êÅ·À­½Ç = {targetRot.eulerAngles}");
+            //Debug.Log($"[{nameof(FaceUICamera)}] LateUpdate(): dirToCamera.normalize = {dirToCamera.normalized}, Ä¿ï¿½ï¿½Å·ï¿½ï¿½ï¿½ï¿½ = {targetRot.eulerAngles}");
             lastTargetRotation = targetRot;
         }
 
-        // ×îÖÕ¸³Öµ£¬ÈÃÎïÌåÃæ³¯ÉãÏñ»ú
+        // ï¿½ï¿½ï¿½Õ¸ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ³¯ï¿½ï¿½ï¿½ï¿½ï¿½
         transform.rotation = targetRot;
     }
 }

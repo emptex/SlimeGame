@@ -1,4 +1,6 @@
 using UnityEngine;
+using System;
+using Random = UnityEngine.Random;
 
 /// <summary>
 /// EnemyAI：
@@ -50,6 +52,13 @@ public class EnemyAI : MonoBehaviour
     // 攻击相关
     private bool isPlayerInAttackRange = false;       // 标记玩家是否在攻击范围 Collider 内
     private float lastAttackTime = -Mathf.Infinity;   // 上一次攻击的时间戳
+
+    // —— 新增两种状态事件 —— //
+    public event Action OnStartChase;
+    public event Action OnStartRoam;
+
+    // 用来记忆上一次是 chase 还是 roam
+    private bool wasChasing = false;
 
     void Awake()
     {
@@ -104,39 +113,39 @@ public class EnemyAI : MonoBehaviour
 
     void Update()
     {
-        // 如果自身已经死亡，就不做任何后续逻辑
-        if (stats.currentHP <= 0)
+        if (stats.currentHP <= 0) return;
+
+        // 计算是否应该 chase
+        bool isChasingNow = false;
+        if (playerTransform != null)
         {
-            return;
+            float distToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+            isChasingNow = distToPlayer <= detectionRadius;
         }
 
-        // 如果场景里找不到玩家，就直接漫游
+        // —— 检测状态切换 —— //
+        if (isChasingNow && !wasChasing)
+        {
+            OnStartChase?.Invoke();
+        }
+        else if (!isChasingNow && wasChasing)
+        {
+            OnStartRoam?.Invoke();
+        }
+        wasChasing = isChasingNow;
+
+        // 根据状态调用原有逻辑
         if (playerTransform == null)
         {
             HandleRoaming();
-            return;
         }
-
-        // 计算与玩家的距离
-        float distToPlayer = Vector3.Distance(transform.position, playerTransform.position);
-
-        // 玩家在检测范围内：先尝试攻击，再追击
-        if (distToPlayer <= detectionRadius)
+        else if (isChasingNow)
         {
-            // 如果玩家同时也在“攻击范围 Trigger”里，那么就尝试攻击
-            if (isPlayerInAttackRange)
-            {
-                HandleAttack();
-            }
-            else
-            {
-                // 否则就继续 Chase
-                HandleChase(distToPlayer);
-            }
+            if (isPlayerInAttackRange) HandleAttack();
+            else HandleChase(Vector3.Distance(transform.position, playerTransform.position));
         }
         else
         {
-            // 玩家不在检测范围内，进入漫游
             HandleRoaming();
         }
     }

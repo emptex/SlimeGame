@@ -1,51 +1,57 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterStats))]
 public class CombatSystem : MonoBehaviour
 {
     [Header("角色数据引用")]
-    public CharacterStats stats;      // 在 Inspector 里拖入与本对象同级的 CharacterStats
+    public CharacterStats stats;
 
     [Header("攻击判定体设置")]
-    public GameObject attackHitboxPrefab;  // 预制：带有 AttackHitbox 脚本的判定体
-    public Transform hitboxSpawnPoint;     // 判定体生成位置
+    public GameObject attackHitboxPrefab;
+    public Transform hitboxSpawnPoint;
+
+    // —— 新增事件 —— //
+    /// <summary>外部调用 Attack() 时触发</summary>
+    public event Action OnAttack;
+    /// <summary>当 TakeDamage 被调用时触发，参数是实际扣的血</summary>
+    public event Action<int> OnTakeDamage;
 
     void Awake()
     {
-        // 如果在 Inspector 没拖入，则自动获取同一 GameObject 上的 CharacterStats
         if (stats == null)
-        {
             stats = GetComponent<CharacterStats>();
-        }
-    }
-
-
-    /// 被外部调用：对本角色造成一次原始伤害（其他 CombatSystem 生成的 Hitbox 会调用到这里）。<param name="damage">外部判定体传过来的原始伤害值</param>
-    /// . 先计算扣血：finalDamage = damage - 防御；1. 真正的扣血逻辑由CharacterStats.ApplyHPChange完成，这是为了确保执行到Charactor里的血量归零事件
-    public void TakeDamage(int damage)
-    {
-        int finalDamage = Mathf.Max(0, damage - stats.defense);
-        stats.ApplyHPChange(finalDamage);
     }
 
     /// <summary>
-    /// 对外调用：本角色主动发起一次攻击，实例化一个短暂的判定体（Hitbox）。
+    /// 外部判定体碰撞时会调用此方法
+    /// </summary>
+    public void TakeDamage(int damage)
+    {
+        int finalDamage = Mathf.Max(0, damage - stats.defense);
+        // 把血量变化交给 CharacterStats
+        stats.ApplyHPChange(finalDamage);
+        // —— 抛出“受伤”事件 —— //
+        OnTakeDamage?.Invoke(finalDamage);
+
+       
+    }
+
+    /// <summary>
+    /// 本角色主动发起一次攻击
     /// </summary>
     public void Attack()
     {
         if (attackHitboxPrefab == null || hitboxSpawnPoint == null)
         {
-            Debug.LogWarning($"[{nameof(CombatSystem)}] AttackHitboxPrefab 或 HitboxSpawnPoint 没设置");
+            Debug.LogWarning($"[{nameof(CombatSystem)}] AttackHitboxPrefab 或 HitboxSpawnPoint 未设置");
             return;
         }
 
-        // 在指定位置生成一个 Hitbox 预制体
-        GameObject obj = Instantiate(attackHitboxPrefab,
-                                     hitboxSpawnPoint.position,
-                                     hitboxSpawnPoint.rotation);
-
-        // 将攻击数值和 owner 赋给判定体，让它在碰撞时调用 TakeDamage()
-        AttackHitbox ah = obj.GetComponent<AttackHitbox>();
+        var obj = Instantiate(attackHitboxPrefab,
+                              hitboxSpawnPoint.position,
+                              hitboxSpawnPoint.rotation);
+        var ah = obj.GetComponent<AttackHitbox>();
         if (ah != null)
         {
             ah.damage = stats.attackPower;
@@ -53,8 +59,11 @@ public class CombatSystem : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"[{nameof(CombatSystem)}] 生成的 Hitbox Prefab 上未找到 AttackHitbox 脚本");
+            Debug.LogWarning($"[{nameof(CombatSystem)}] 未找到 AttackHitbox 脚本");
         }
+
+        // —— 抛出“攻击”事件 —— //
+        OnAttack?.Invoke();
     }
 
     private void Die()
