@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using UnityEngine.Events;
 
 /// <summary>
 /// CharacterStats：
@@ -74,33 +75,36 @@ public class CharacterStats : MonoBehaviour
     /// <summary>
     /// 在 GameManager 确认“杀死”之后，才真正销毁敌人
     /// </summary>
+    [Header("确认处决／复活时的扩展事件（可在 Inspector 里配置）")]
+    public UnityEvent onConfirmedKill;
+    public UnityEvent onConfirmedHeal;
+
+    // … 其他字段、ApplyHPChange …
+
     public void ConfirmKill()
     {
-        // 如果你要播放一个消失或死亡的特效，可以放在这里
-        Destroy(gameObject);
+        // 先触发外部钩子
+        onConfirmedKill?.Invoke();
+
+        // 再真正销毁
+        //Destroy(gameObject);
     }
 
-    /// <summary>
-    /// 在 GameManager 确认“治愈”之后，敌人复活
-    /// </summary>
     public void ConfirmHeal()
     {
+        // 先触发复活回调
+        onConfirmedHeal?.Invoke();
+
         // 血量重置
         hasTriggeredZero = false;
         currentHP = maxHP;
 
-        // 如果敌人身上有 NavMeshAgent 或其他移动逻辑，需要恢复它们
+        // 恢复 NavMeshAgent
         var nav = GetComponent<UnityEngine.AI.NavMeshAgent>();
-        if (nav != null)
-        {
-            nav.isStopped = false;
-        }
+        if (nav != null) nav.isStopped = false;
 
-        // 如果有 Animator，可以播放一个“复活”动画
+        // 播放复活动画
         var anim = GetComponent<Animator>();
-        if (anim != null)
-        {
-            anim.SetTrigger("Revive");
-        }
+        if (anim != null) anim.SetTrigger("Revive");
     }
 }

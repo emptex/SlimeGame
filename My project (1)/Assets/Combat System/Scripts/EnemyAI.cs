@@ -2,147 +2,134 @@ using UnityEngine;
 using System;
 using Random = UnityEngine.Random;
 
-/// <summary>
-/// EnemyAI：
-/// 1. 如果在指定的“索敌半径”(detectionRadius)内检测到 Tag="Player" 的物体，就向玩家移动；
-/// 2. 当玩家进入“攻击范围 Collider”时，如果冷却到位，就调用 CombatSystem.Attack()；
-/// 3. 如果没有检测到玩家，就在场景里随机漫游；
-/// 4. 可在 Inspector 里面调整索敌半径、追击速度、漫游速度、漫游切换间隔、攻击间隔等参数；
-/// 5. 通过 Move() 方法执行实际移动，方便以后切换成 NavMeshAgent 或其它移动方式；
-/// 6. 通过 OnTriggerEnter/Exit 监测“玩家是否在攻击范围 Collider 内”，并配合攻击冷却决定何时发起攻击；
-/// 7. **新增：活动范围 Trigger (roamAreaTrigger)。当敌人跑出此范围时，马上取反漫游方向，避免乱跑。**
-/// </summary>
 [RequireComponent(typeof(CharacterStats))]
 [RequireComponent(typeof(CombatSystem))]
-[RequireComponent(typeof(Rigidbody))] // 需要 Rigidbody 去处理触发器检测
+[RequireComponent(typeof(Rigidbody))]
 public class EnemyAI : MonoBehaviour
 {
-    [Header("索敌与移动参数")]
-    [Tooltip("玩家进入此半径内后，敌人开始追击")]
+    [Header("目标检测配置")]
+    [Tooltip("如果不想按 Tag 自动查找，可开启并手动在下方填入一组 Transform")]
+    public bool useManualTargets = false;
+    [Tooltip("自动查找时，对应要索敌的 Tag，比如 \"Player\"")]
+    public string detectionTag = "Player";
+    [Tooltip("手动指定一组目标 Transform（优先使用）")]
+    public Transform[] manualTargets;
+
+    [Header("追击与漫游参数")]
     public float detectionRadius = 6f;
-
-    [Tooltip("当玩家在索敌范围内时，追击速度")]
     public float chaseSpeed = 3f;
-
-    [Tooltip("当玩家不在索敌范围时，漫游速度")]
     public float roamSpeed = 1.5f;
-
-    [Tooltip("漫游方向每隔多少秒随机切换一次")]
     public float roamChangeInterval = 4f;
 
-    [Header("攻击参数")]
-    [Tooltip("攻击范围使用子物体挂载的 Collider（Trigger）检测")]
+    [Header("攻击范围 & 冷却")]
+    [Tooltip("挂载一个 Trigger Collider，用于检测玩家进入近战范围")]
     public Collider attackRangeCollider;
-    [Tooltip("两次攻击之间的最短时间间隔（秒）")]
     public float attackInterval = 1f;
 
-    [Header("活动范围 Trigger")]
-    [Tooltip("挂载在敌人子物体上的 Trigger Collider，控制漫游最大活动范围")]
+    [Header("漫游区域 Trigger")]
+    [Tooltip("挂载一个 Trigger Collider，离开时反向漫游")]
     public Collider roamAreaTrigger;
 
-    // --------------- 组件引用 ---------------
-    protected CharacterStats stats;      // 存血量/数值，用于判断是否死亡
-    protected CombatSystem combat;       // 负责实际发起攻击（Instantiate Hitbox 等）
-    protected Transform playerTransform; // 缓存玩家 Transform，Tag="Player"
+    // 组件引用
+    private CharacterStats stats;
+    private CombatSystem combat;
+    private Rigidbody rb;
 
-    // 漫游相关
-    private float roamTimer = 0f;
-    private Vector3 roamDirection = Vector3.zero;
+    // 漫游状态
+    private Vector3 roamDirection;
+    private float roamTimer;
 
-    // 攻击相关
-    private bool isPlayerInAttackRange = false;       // 标记玩家是否在攻击范围 Collider 内
-    private float lastAttackTime = -Mathf.Infinity;   // 上一次攻击的时间戳
+    // 攻击状态
+    private bool isPlayerInAttackRange;
+    private float lastAttackTime = -Mathf.Infinity;
 
-    // —— 新增两种状态事件 —— //
+    // chase<>roam 事件（可订阅）
     public event Action OnStartChase;
     public event Action OnStartRoam;
-
-    // 用来记忆上一次是 chase 还是 roam
     private bool wasChasing = false;
+
+    // 运行时目标列表
+    private Transform[] targets;
 
     void Awake()
     {
-        // 缓存组件引用
         stats = GetComponent<CharacterStats>();
         combat = GetComponent<CombatSystem>();
+        rb = GetComponent<Rigidbody>();
 
-        // 确保 attackRangeCollider 已经被赋值
-        if (attackRangeCollider == null)
-        {
-            Debug.LogError($"[{nameof(EnemyAI)}] 需要在 Inspector 里将 'attackRangeCollider' 赋值为挂在 Enemy 身上的子物体 Collider (Is Trigger)。");
-        }
-        else
-        {
-            attackRangeCollider.isTrigger = true;
-        }
+        // 物理设置：开启重力，连续检测，冻结旋转
+        rb.isKinematic = false;
+        rb.useGravity = true;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
 
-        // 确保 roamAreaTrigger 已经被赋值
-        if (roamAreaTrigger == null)
-        {
-            Debug.LogError($"[{nameof(EnemyAI)}] 需要在 Inspector 里将 'roamAreaTrigger' 赋值为挂在 Enemy 身上的子物体 Collider (Is Trigger)。");
-        }
-        else
-        {
-            // 为了确保触发正常，这里也把它设为 Trigger
-            roamAreaTrigger.isTrigger = true;
-        }
+        // 确保 Trigger Collider 标记正确
+        if (attackRangeCollider) attackRangeCollider.isTrigger = true;
+        if (roamAreaTrigger) roamAreaTrigger.isTrigger = true;
 
-        // 强制要求有 Rigidbody（最好在 Inspector 里已经设置为 Is Kinematic = true）
-        Rigidbody rb = GetComponent<Rigidbody>();
-        if (rb == null)
-        {
-            rb = gameObject.AddComponent<Rigidbody>();
-        }
-        rb.isKinematic = true;  // 物理不控制运动，只做 Trigger 检测
-
-        // 找到场景里 Tag="Player" 的物体
-        GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
-        if (playerGO != null)
-        {
-            playerTransform = playerGO.transform;
-        }
-        else
-        {
-            Debug.LogWarning($"[{nameof(EnemyAI)}] 找不到 Tag=\"Player\" 的对象，请检查场景中是否有正确标记的玩家。");
-        }
-
-        // 初始化漫游计时器 & 随机漫游方向
+        // 漫游初始化
         roamTimer = roamChangeInterval;
         ChooseNewRoamDirection();
+
+        // 预先填充 targets
+        RefreshTargets();
+    }
+
+    void RefreshTargets()
+    {
+        if (useManualTargets && manualTargets != null && manualTargets.Length > 0)
+        {
+            targets = manualTargets;
+        }
+        else if (!string.IsNullOrEmpty(detectionTag))
+        {
+            var gos = GameObject.FindGameObjectsWithTag(detectionTag);
+            targets = new Transform[gos.Length];
+            for (int i = 0; i < gos.Length; i++)
+                targets[i] = gos[i].transform;
+        }
+        else
+        {
+            targets = new Transform[0];
+        }
     }
 
     void Update()
     {
         if (stats.currentHP <= 0) return;
 
-        // 计算是否应该 chase
-        bool isChasingNow = false;
-        if (playerTransform != null)
+        // 如果没有手动目标，则根据 Tag 动态刷新
+        if (!useManualTargets && (targets == null || targets.Length == 0))
+            RefreshTargets();
+
+        // 找最近目标
+        Transform nearest = null;
+        float minDist = Mathf.Infinity;
+        foreach (var t in targets)
         {
-            float distToPlayer = Vector3.Distance(transform.position, playerTransform.position);
-            isChasingNow = distToPlayer <= detectionRadius;
+            if (t == null) continue;
+            float d = Vector3.Distance(transform.position, t.position);
+            if (d < minDist)
+            {
+                minDist = d;
+                nearest = t;
+            }
         }
 
-        // —— 检测状态切换 —— //
-        if (isChasingNow && !wasChasing)
-        {
-            OnStartChase?.Invoke();
-        }
-        else if (!isChasingNow && wasChasing)
-        {
-            OnStartRoam?.Invoke();
-        }
+        bool isChasingNow = (nearest != null && minDist <= detectionRadius);
+
+        // 触发 chase/roam 事件一次
+        if (isChasingNow && !wasChasing) OnStartChase?.Invoke();
+        if (!isChasingNow && wasChasing) OnStartRoam?.Invoke();
         wasChasing = isChasingNow;
 
-        // 根据状态调用原有逻辑
-        if (playerTransform == null)
+        // 执行对应逻辑
+        if (nearest != null && isChasingNow)
         {
-            HandleRoaming();
-        }
-        else if (isChasingNow)
-        {
-            if (isPlayerInAttackRange) HandleAttack();
-            else HandleChase(Vector3.Distance(transform.position, playerTransform.position));
+            if (isPlayerInAttackRange)
+                HandleAttack(nearest);
+            else
+                HandleChase(nearest);
         }
         else
         {
@@ -150,68 +137,15 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    #region —— 攻击逻辑（Attack） —— 
+    #region —— Chase / Roam / Attack —— 
 
-    /// <summary>
-    /// 当玩家位于 attackRangeCollider 的 Trigger 范围内，并且攻击冷却到位时调用。
-    /// </summary>
-    protected virtual void HandleAttack()
+    private void HandleChase(Transform target)
     {
-        // 检查冷却
-        if (Time.time - lastAttackTime >= attackInterval)
-        {
-            // 朝向玩家
-            Vector3 dir = (playerTransform.position - transform.position);
-            dir.y = 0;
-            if (dir.sqrMagnitude > 0.001f)
-            {
-                Quaternion look = Quaternion.LookRotation(dir.normalized);
-                transform.rotation = Quaternion.Slerp(transform.rotation, look, Time.deltaTime * 10f);
-            }
-
-            // 真正调用 CombatSystem 执行攻击（生成判定体等）
-            combat.Attack();
-            lastAttackTime = Time.time;
-        }
-        else
-        {
-            // 冷却未到，则保持 Idle 或小幅度转向玩家
-            Vector3 dir = (playerTransform.position - transform.position);
-            dir.y = 0;
-            if (dir.sqrMagnitude > 0.001f)
-            {
-                Quaternion look = Quaternion.LookRotation(dir.normalized);
-                transform.rotation = Quaternion.Slerp(transform.rotation, look, Time.deltaTime * 10f);
-            }
-        }
+        Vector3 dir = (target.position - transform.position).WithY(0).normalized;
+        Move(dir, chaseSpeed);
     }
 
-    #endregion
-
-    #region —— 追击逻辑（Chase） —— 
-
-    /// <summary>
-    /// 当玩家在检测范围内，但不在攻击范围 Trigger 内时，敌人向玩家直线移动（XZ 平面）。
-    /// </summary>
-    /// <param name="distToPlayer">与玩家的距离</param>
-    protected virtual void HandleChase(float distToPlayer)
-    {
-        // 计算玩家方向（只在XZ平面移动）
-        Vector3 direction = (playerTransform.position - transform.position);
-        direction.y = 0f; // 忽略高度差
-
-        // 让敌人向玩家移动
-        Move(direction, chaseSpeed);
-    }
-
-    #endregion
-
-    #region —— 漫游逻辑（Roaming） —— 
-
-    /// <summary>
-    /// 当玩家不在检测范围、或场景里没有玩家时，每隔 roamChangeInterval 秒更换一个随机方向，并匀速移动
-    /// </summary>
-    protected void HandleRoaming()
+    private void HandleRoaming()
     {
         roamTimer -= Time.deltaTime;
         if (roamTimer <= 0f)
@@ -219,118 +153,83 @@ public class EnemyAI : MonoBehaviour
             roamTimer = roamChangeInterval;
             ChooseNewRoamDirection();
         }
-
-        // 沿当前 roamDirection 以 roamSpeed 移动
         Move(roamDirection, roamSpeed);
     }
 
-    /// <summary>
-    /// 随机生成一个单位向量，用于漫游时的移动方向（XZ 平面）
-    /// </summary>
-    protected void ChooseNewRoamDirection()
+    private void HandleAttack(Transform target)
     {
-        // 随机一个 0~360 度角
-        float angle = Random.Range(0f, 360f);
-        roamDirection = new Vector3(
-            Mathf.Cos(angle * Mathf.Deg2Rad),
-            0f,
-            Mathf.Sin(angle * Mathf.Deg2Rad)
-        ).normalized;
-    }
-
-    #endregion
-
-    #region —— 核心移动接口（可扩展／预留） —— 
-
-    /// <summary>
-    /// 敌人真正执行移动的接口：当前实现直接操纵 transform。
-    /// 未来如果想用 NavMeshAgent，只要在子类里 override 这个方法，改成 agent.SetDestination(...) 即可。
-    /// </summary>
-    /// <param name="direction">
-    ///     想要移动的方向向量（可不归一化）。
-    ///     XZ 平面移动时，最好把 .y 置为 0，再传进来。</param>
-    /// <param name="speed">移动速度</param>
-    protected virtual void Move(Vector3 direction, float speed)
-    {
-        if (direction.sqrMagnitude < 0.001f) return;
-
-        // 先让角色面向移动方向
-        Vector3 flatDir = direction;
-        flatDir.y = 0;
-        Quaternion targetRot = Quaternion.LookRotation(flatDir.normalized);
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            targetRot,
-            Time.deltaTime * 10f
-        );
-
-        // 再沿该方向平移
-        Vector3 moveDelta = flatDir.normalized * speed * Time.deltaTime;
-        transform.position += moveDelta;
-    }
-
-    #endregion
-
-    #region —— 攻击范围 Trigger 感知（OnTriggerEnter/Exit） —— 
-
-    void OnTriggerEnter(Collider other)
-    {
-        // 当玩家的 Collider 进入“攻击范围 Trigger”时，把标志置 true
-        if (attackRangeCollider != null && other.CompareTag("Player"))
+        if (Time.time - lastAttackTime < attackInterval)
         {
+            FaceTarget(target);
+            return;
+        }
+
+        FaceTarget(target);
+        combat.Attack();
+        lastAttackTime = Time.time;
+    }
+
+    #endregion
+
+    #region —— Movement —— 
+
+    private void Move(Vector3 direction, float speed)
+    {
+        // 设置水平速度，保留垂直分量由物理处理
+        Vector3 horizontal = direction * speed;
+        rb.linearVelocity = new Vector3(horizontal.x, rb.linearVelocity.y, horizontal.z);
+
+        // 平滑转向
+        if (horizontal.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(horizontal.normalized);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 10f);
+        }
+    }
+
+    private void FaceTarget(Transform t)
+    {
+        Vector3 dir = (t.position - transform.position).WithY(0);
+        if (dir.sqrMagnitude > 0.001f)
+        {
+            Quaternion rot = Quaternion.LookRotation(dir.normalized);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * 10f);
+        }
+    }
+
+    private void ChooseNewRoamDirection()
+    {
+        float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+        roamDirection = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)).normalized;
+    }
+
+    #endregion
+
+    #region —— Trigger 感知 —— 
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag(detectionTag))
             isPlayerInAttackRange = true;
-        }
     }
 
-    void OnTriggerExit(Collider other)
+    private void OnTriggerExit(Collider other)
     {
-        // 当玩家的 Collider 离开“攻击范围 Trigger”时，把标志置 false
-        if (attackRangeCollider != null && other.CompareTag("Player"))
-        {
+        if (other.CompareTag(detectionTag))
             isPlayerInAttackRange = false;
+
+        if (other == roamAreaTrigger)
+        {
+            roamDirection = -roamDirection;
+            roamTimer = roamChangeInterval;
         }
     }
 
     #endregion
+}
 
-    #region —— Gizmos 绘制（可选） —— 
-
-    void OnDrawGizmosSelected()
-    {
-        // 在 Scene 视图里画出 detectionRadius 方便调试
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRadius);
-
-        // 画出攻击范围
-        if (attackRangeCollider is SphereCollider sphere)
-        {
-            Gizmos.color = Color.red;
-            Vector3 worldCenter = transform.TransformPoint(sphere.center);
-            Gizmos.DrawWireSphere(worldCenter, sphere.radius * transform.localScale.x);
-        }
-        else if (attackRangeCollider is BoxCollider box)
-        {
-            Gizmos.color = Color.red;
-            Vector3 worldCenter = transform.TransformPoint(box.center);
-            Vector3 worldSize = Vector3.Scale(box.size, transform.localScale);
-            Gizmos.DrawWireCube(worldCenter, worldSize);
-        }
-
-        // 画出漫游活动范围
-        if (roamAreaTrigger is SphereCollider roamSphere)
-        {
-            Gizmos.color = Color.cyan;
-            Vector3 roamCenter = transform.TransformPoint(roamSphere.center);
-            Gizmos.DrawWireSphere(roamCenter, roamSphere.radius * transform.localScale.x);
-        }
-        else if (roamAreaTrigger is BoxCollider roamBox)
-        {
-            Gizmos.color = Color.cyan;
-            Vector3 roamCenter = transform.TransformPoint(roamBox.center);
-            Vector3 roamSize = Vector3.Scale(roamBox.size, transform.localScale);
-            Gizmos.DrawWireCube(roamCenter, roamSize);
-        }
-    }
-
-    #endregion
+// 小扩展方法：清除 Y 分量
+public static class Vector3Extensions
+{
+    public static Vector3 WithY(this Vector3 v, float y) => new Vector3(v.x, y, v.z);
 }

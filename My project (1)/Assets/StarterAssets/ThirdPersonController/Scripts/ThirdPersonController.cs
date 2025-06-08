@@ -156,8 +156,8 @@ namespace StarterAssets
         {
             _hasAnimator = TryGetComponent(out _animator);
 
-            JumpAndGravity();
             GroundedCheck();
+            JumpAndGravity();
             Move();
         }
 
@@ -299,7 +299,7 @@ namespace StarterAssets
                     _verticalVelocity = -2f;
                 }
 
-                // Jump
+                // —— 只在刚按下“跳跃”并且真正落地时触发一次 —— //
                 if (_input.jump && _jumpTimeoutDelta <= 0.0f)
                 {
                     // the square root of H * -2 * G = how much velocity needed to reach desired height
@@ -310,6 +310,8 @@ namespace StarterAssets
                     {
                         _animator.SetBool(_animIDJump, true);
                     }
+                    // —— 消耗掉这次跳跃输入，防止下一帧又触发 —— //
+                    _input.jump = false;
                 }
 
                 // jump timeout
@@ -338,7 +340,7 @@ namespace StarterAssets
                 }
 
                 // if we are not grounded, do not jump
-                _input.jump = false;
+                ///_input.jump = false;
             }
 
             // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
