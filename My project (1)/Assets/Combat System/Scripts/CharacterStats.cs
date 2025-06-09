@@ -58,14 +58,14 @@ public class CharacterStats : MonoBehaviour
         if (currentHP < 0) currentHP = 0;
         if (currentHP > maxHP) currentHP = maxHP;
 
-        Debug.Log($"{gameObject.name}.ApplyHPChange({value}) 实施后，currentHP = {currentHP}/{maxHP}");
+        ///Debug.Log($"{gameObject.name}.ApplyHPChange({value}) 实施后，currentHP = {currentHP}/{maxHP}");
 
-        Debug.Log($"[DEBUG] 判断前：currentHP = {currentHP}, hasTriggeredZero = {hasTriggeredZero}");
+        ///Debug.Log($"[DEBUG] 判断前：currentHP = {currentHP}, hasTriggeredZero = {hasTriggeredZero}");
         // 如果血量为 0，且还没触发过“从正数变到 0”这一事件，就触发
         if (currentHP == 0 && hasTriggeredZero == false)
         {
             hasTriggeredZero = true;  // 标记已经触发过，避免重复
-            Debug.Log($"[CharacterStats] {gameObject.name} 血量归零，准备触发 OnZeroHP");
+            ///Debug.Log($"[CharacterStats] {gameObject.name} 血量归零，准备触发 OnZeroHP");
             // 触发事件：只要别人（GameManager）订阅了，就会被调用
             OnZeroHP?.Invoke(this);
         }
